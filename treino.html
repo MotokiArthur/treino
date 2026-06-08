@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treino ABC</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card2: #222732;
+    --accent: #4f9dff;
+    --accent2: #4caf50;
+    --text: #e7ebf0;
+    --muted: #97a0ad;
+    --border: #2c313c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-text-size-adjust: 100%;
+  }
+  header { padding: 16px 14px 10px; text-align: center; }
+  header h1 { margin: 0; font-size: 1.5rem; letter-spacing: .5px; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: .85rem; }
+
+  .tabs {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    padding: 10px 8px; position: sticky; top: 0; background: var(--bg);
+    z-index: 10; border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    padding: 9px 13px; border-radius: 999px; font-size: .9rem; cursor: pointer; transition: .15s;
+  }
+  .tab.active { background: var(--accent); border-color: var(--accent); color: #06203f; font-weight: 700; }
+  .rest-note { width: 100%; text-align: center; color: var(--muted); font-size: .78rem; margin-top: 4px; }
+
+  main { padding: 12px 10px 60px; max-width: 760px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 12px;
+  }
+  .panel-head h2 { margin: 0; font-size: 1.2rem; }
+  .date-field {
+    display: flex; align-items: center; gap: 6px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px;
+  }
+  .date-field label { font-size: .8rem; color: var(--muted); }
+  .date-field input {
+    background: var(--card2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: 6px; font-size: .9rem;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .4px;
+    padding: 6px 4px; text-align: center; font-weight: 600;
+  }
+  thead th.ex { text-align: left; }
+  tbody tr:nth-child(odd) { background: var(--card); }
+  tbody tr:nth-child(even) { background: var(--card2); }
+  tbody td { padding: 8px 4px; vertical-align: middle; }
+  .ex-name { font-size: .95rem; font-weight: 600; padding-left: 8px; text-transform: capitalize; }
+  .grp { border-left: 2px solid var(--border); }
+  input.cell {
+    width: 100%; min-width: 48px; background: #11141a; border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 9px 4px; font-size: 1rem; text-align: center;
+  }
+  input.cell:focus { outline: none; border-color: var(--accent); }
+  input.obs {
+    width: 100%; min-width: 70px; background: #11141a; border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 9px 6px; font-size: .9rem;
+  }
+
+  .actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    border-radius: 8px; padding: 11px 18px; font-size: .92rem; cursor: pointer; border: 1px solid;
+  }
+  .btn-save { background: var(--accent2); border-color: var(--accent2); color: #06270a; font-weight: 700; }
+  .btn-save:active { filter: brightness(.9); }
+  .btn-clear { background: transparent; border-color: #5a2a2a; color: #ff8585; }
+  .btn-clear:active { background: #2a1414; }
+
+  .saved-hint {
+    text-align: center; color: var(--accent2); font-size: .82rem; margin-top: 8px;
+    height: 1em; transition: opacity .3s; opacity: 0;
+  }
+  .saved-hint.show { opacity: 1; }
+
+  /* Histórico */
+  .hist { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 14px; }
+  .hist h3 { margin: 0 0 10px; font-size: 1rem; color: var(--accent); }
+  .hist-empty { color: var(--muted); font-size: .85rem; }
+  .hist-item { border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .hist-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 11px 12px; cursor: pointer; background: var(--card);
+  }
+  .hist-bar:active { background: var(--card2); }
+  .hist-date { font-weight: 600; font-size: .95rem; }
+  .hist-date .arrow { color: var(--muted); margin-right: 8px; display: inline-block; transition: transform .15s; }
+  .hist-item.open .arrow { transform: rotate(90deg); }
+  .hist-del {
+    background: transparent; border: none; color: #ff8585; font-size: .8rem; cursor: pointer; padding: 4px 6px;
+  }
+  .hist-body { display: none; padding: 4px 8px 10px; }
+  .hist-item.open .hist-body { display: block; }
+  .ro-table th, .ro-table td { font-size: .85rem; }
+  .ro-table td.val { text-align: center; }
+
+  @media (max-width: 480px) {
+    thead th { font-size: .62rem; }
+    .ex-name { font-size: .85rem; }
+    input.cell { font-size: .95rem; padding: 9px 2px; }
+    tbody td { padding: 6px 2px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏋️ Treino ABC</h1>
+  <p>Leg • Push • Pull &nbsp;|&nbsp; descanso &nbsp;|&nbsp; Leg • Push • Pull</p>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+<div id="warn" style="display:none; margin:8px 10px; padding:10px 12px; border:1px solid #6b5a1f; background:#2b2510; color:#f0d77a; border-radius:8px; font-size:.82rem; max-width:760px; margin-left:auto; margin-right:auto;">
+  ⚠️ Os dados <b>não estão sendo salvos</b> neste modo (arquivo local no iOS). Funciona durante o uso, mas ao fechar o app você perde. Veja como resolver no fim da página.
+</div>
+<main id="main"></main>
+
+<script>
+  // ---- Dados dos treinos ----
+  const TREINOS = [
+    { id: "leg1", nome: "Leg 1", exercicios: [
+      "panturrilha", "flexor sentado", "flexor deitado",
+      "agachamento", "extensor", "stiff"
+    ]},
+    { id: "push1", nome: "Push 1", exercicios: [
+      "supino inclinado", "supino reto", "crucifixo máquina",
+      "tríceps polia", "desenvolvimento", "elevação lateral halteres"
+    ]},
+    { id: "pull1", nome: "Pull 1", exercicios: [
+      "remada curvada", "remada baixa triângulo", "remada aberta",
+      "puxada fechada", "rosca scott", "lombar banco"
+    ]},
+    { id: "leg2", nome: "Leg 2", rest: true, exercicios: [
+      "panturrilha", "flexor sentado", "agachamento",
+      "leg 45", "abdutor", "stiff"
+    ]},
+    { id: "push2", nome: "Push 2", exercicios: [
+      "supino inclinado", "supino declinado", "crucifixo polia baixa",
+      "tríceps francês", "elevação lateral máquina"
+    ]},
+    { id: "pull2", nome: "Pull 2", exercicios: [
+      "remada curvada", "puxada aberta", "remada triângulo",
+      "puxada fechada", "bíceps no banco 45", "lombar banco"
+    ]},
+  ];
+
+  const COLS = [
+    { k: "c1", lbl: "1ª carga" },
+    { k: "r1", lbl: "1ª reps" },
+    { k: "c2", lbl: "2ª carga" },
+    { k: "r2", lbl: "2ª reps" },
+    { k: "obs", lbl: "Obs" },
+  ];
+
+  // draft = o que está sendo digitado agora; hist = registros salvos por data
+  const DRAFT_KEY = "treinoABC_draft_v2";
+  const HIST_KEY  = "treinoABC_hist_v1";
+
+  // ---- Armazenamento seguro ----
+  // No iOS, abrir um arquivo local (file://) bloqueia o localStorage e lança erro.
+  // Aqui detectamos isso e caímos pra uma memória de reserva, sem travar a página.
+  let storageOK = true;
+  const mem = {};
+  function rawGet(key) {
+    try { return localStorage.getItem(key); }
+    catch (e) { storageOK = false; return key in mem ? mem[key] : null; }
+  }
+  function rawSet(key, val) {
+    try { localStorage.setItem(key, val); }
+    catch (e) { storageOK = false; mem[key] = val; }
+  }
+
+  const draft = JSON.parse(rawGet(DRAFT_KEY) || "{}");
+  const hist  = JSON.parse(rawGet(HIST_KEY)  || "{}");
+
+  function salvarDraft() { rawSet(DRAFT_KEY, JSON.stringify(draft)); }
+  function salvarHist()  { rawSet(HIST_KEY,  JSON.stringify(hist)); }
+
+  function getD(key) { return draft[key] != null ? draft[key] : ""; }
+  function setD(key, v) { if (v === "") delete draft[key]; else draft[key] = v; salvarDraft(); }
+
+  function hojeISO() {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+  }
+  function formatarData(iso) {
+    if (!iso) return "(sem data)";
+    const [a, m, d] = iso.split("-");
+    return `${d}/${m}/${a}`;
+  }
+
+  // ---- Render ----
+  const tabsEl = document.getElementById("tabs");
+  const mainEl = document.getElementById("main");
+  let ativo = TREINOS[0].id;
+
+  TREINOS.forEach((t, i) => {
+    if (t.rest) {
+      const note = document.createElement("div");
+      note.className = "rest-note";
+      note.textContent = "↑ Descanso após Pull 1 ↑";
+      tabsEl.appendChild(note);
+    }
+    const btn = document.createElement("button");
+    btn.className = "tab" + (i === 0 ? " active" : "");
+    btn.textContent = t.nome;
+    btn.dataset.target = t.id;
+    btn.onclick = () => mostrar(t.id);
+    tabsEl.appendChild(btn);
+
+    const panel = document.createElement("section");
+    panel.className = "panel" + (i === 0 ? " active" : "");
+    panel.id = "panel-" + t.id;
+
+    const dateKey = t.id + "::data";
+    const dataAtual = getD(dateKey) || hojeISO();
+
+    panel.innerHTML = `
+      <div class="panel-head">
+        <h2>${t.nome}</h2>
+        <div class="date-field">
+          <label for="d-${t.id}">📅 Data do treino:</label>
+          <input type="date" id="d-${t.id}" value="${dataAtual}">
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="ex">Exercício</th>
+            <th class="grp">1ª carga</th><th>1ª reps</th>
+            <th class="grp">2ª carga</th><th>2ª reps</th>
+            <th class="grp">Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${t.exercicios.map((ex, idx) => {
+            const base = t.id + "::" + idx;
+            return `<tr>
+              <td class="ex-name">${ex}</td>
+              <td class="grp"><input class="cell" inputmode="decimal" placeholder="kg"
+                   data-key="${base}::c1" value="${getD(base+'::c1')}"></td>
+              <td><input class="cell" inputmode="numeric" placeholder="reps"
+                   data-key="${base}::r1" value="${getD(base+'::r1')}"></td>
+              <td class="grp"><input class="cell" inputmode="decimal" placeholder="kg"
+                   data-key="${base}::c2" value="${getD(base+'::c2')}"></td>
+              <td><input class="cell" inputmode="numeric" placeholder="reps"
+                   data-key="${base}::r2" value="${getD(base+'::r2')}"></td>
+              <td class="grp"><input class="obs" placeholder="–"
+                   data-key="${base}::obs" value="${getD(base+'::obs')}"></td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+      <div class="actions">
+        <button class="btn btn-save"  data-save="${t.id}">💾 Salvar treino no histórico</button>
+        <button class="btn btn-clear" data-clear="${t.id}">Limpar campos</button>
+      </div>
+      <div class="saved-hint" id="hint-${t.id}"></div>
+
+      <div class="hist">
+        <h3>📜 Histórico — ${t.nome}</h3>
+        <div id="hist-${t.id}"></div>
+      </div>
+    `;
+    mainEl.appendChild(panel);
+
+    panel.querySelector("#d-" + t.id).addEventListener("change", e => setD(dateKey, e.target.value));
+    renderHist(t.id);
+  });
+
+  // digitação nos campos
+  mainEl.addEventListener("input", e => {
+    const k = e.target.dataset.key;
+    if (k) setD(k, e.target.value);
+  });
+
+  // cliques (salvar / limpar / abrir registro / apagar registro)
+  mainEl.addEventListener("click", e => {
+    const saveId  = e.target.dataset.save;
+    const clearId = e.target.dataset.clear;
+    if (saveId)  return salvarNoHistorico(saveId);
+    if (clearId) return limparCampos(clearId);
+
+    const bar = e.target.closest(".hist-bar");
+    if (bar && !e.target.classList.contains("hist-del")) {
+      bar.parentElement.classList.toggle("open");
+    }
+    if (e.target.classList.contains("hist-del")) {
+      apagarRegistro(e.target.dataset.tid, parseInt(e.target.dataset.ts, 10));
+    }
+  });
+
+  function flash(id, msg) {
+    const el = document.getElementById("hint-" + id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove("show"), 1800);
+  }
+
+  function salvarNoHistorico(id) {
+    const t = TREINOS.find(x => x.id === id);
+    // coleta valores do draft
+    const vals = {};
+    let temAlgo = false;
+    t.exercicios.forEach((ex, idx) => {
+      COLS.forEach(c => {
+        const v = getD(id + "::" + idx + "::" + c.k);
+        if (v !== "") { vals[idx + "::" + c.k] = v; temAlgo = true; }
+      });
+    });
+    if (!temAlgo) { flash(id, "Nada preenchido pra salvar."); return; }
+
+    const data = getD(id + "::data") || hojeISO();
+    if (!hist[id]) hist[id] = [];
+    hist[id].push({ date: data, ts: Date.now(), vals });
+    salvarHist();
+
+    // limpa o draft pra começar em branco no próximo treino
+    Object.keys(draft).forEach(k => { if (k.startsWith(id + "::")) delete draft[k]; });
+    salvarDraft();
+    limparInputs(id);
+    document.getElementById("d-" + id).value = hojeISO();
+
+    renderHist(id);
+    flash(id, "✓ Treino de " + formatarData(data) + " salvo no histórico!");
+  }
+
+  function limparCampos(id) {
+    if (!confirm("Limpar os campos atuais? (o histórico não é afetado)")) return;
+    Object.keys(draft).forEach(k => {
+      if (k.startsWith(id + "::") && !k.endsWith("::data")) delete draft[k];
+    });
+    salvarDraft();
+    limparInputs(id);
+    flash(id, "Campos limpos.");
+  }
+
+  function limparInputs(id) {
+    document.querySelectorAll('#panel-' + id + ' input.cell, #panel-' + id + ' input.obs')
+      .forEach(inp => inp.value = "");
+  }
+
+  function apagarRegistro(id, ts) {
+    if (!confirm("Apagar este registro do histórico?")) return;
+    hist[id] = (hist[id] || []).filter(r => r.ts !== ts);
+    salvarHist();
+    renderHist(id);
+  }
+
+  function renderHist(id) {
+    const box = document.getElementById("hist-" + id);
+    const regs = (hist[id] || []).slice().sort((a, b) => b.ts - a.ts);
+    if (regs.length === 0) {
+      box.innerHTML = '<div class="hist-empty">Nenhum treino salvo ainda. Preencha e toque em "Salvar treino no histórico".</div>';
+      return;
+    }
+    const t = TREINOS.find(x => x.id === id);
+    box.innerHTML = regs.map(r => {
+      const linhas = t.exercicios.map((ex, idx) => {
+        const g = k => r.vals[idx + "::" + k] || "–";
+        return `<tr>
+          <td class="ex-name">${ex}</td>
+          <td class="val grp">${g("c1")}</td><td class="val">${g("r1")}</td>
+          <td class="val grp">${g("c2")}</td><td class="val">${g("r2")}</td>
+          <td class="val grp">${g("obs")}</td>
+        </tr>`;
+      }).join("");
+      return `<div class="hist-item">
+        <div class="hist-bar">
+          <span class="hist-date"><span class="arrow">▶</span>${formatarData(r.date)}</span>
+          <button class="hist-del" data-tid="${id}" data-ts="${r.ts}">apagar</button>
+        </div>
+        <div class="hist-body">
+          <table class="ro-table">
+            <thead><tr>
+              <th class="ex">Exercício</th>
+              <th class="grp">1ª carga</th><th>1ª reps</th>
+              <th class="grp">2ª carga</th><th>2ª reps</th>
+              <th class="grp">Obs</th>
+            </tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join("");
+  }
+
+  function mostrar(id) {
+    ativo = id;
+    document.querySelectorAll(".tab").forEach(b =>
+      b.classList.toggle("active", b.dataset.target === id));
+    document.querySelectorAll(".panel").forEach(p =>
+      p.classList.toggle("active", p.id === "panel-" + id));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Mostra o aviso se o armazenamento persistente não estiver disponível
+  if (!storageOK) document.getElementById("warn").style.display = "block";
+</script>
+</body>
+</html>
