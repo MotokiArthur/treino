@@ -17,7 +17,7 @@ Aplicativo web simples para registrar e acompanhar treinos no esquema **Leg / Pu
 3. Preencha as cargas e repetições
 4. Clique em **Salvar treino no histórico** ao terminar
 
-> **iPhone/Safari:** abrir arquivos locais (`file://`) bloqueia o `localStorage` no iOS. Nesse caso, o app funciona durante o uso mas os dados são perdidos ao fechar. Para persistência no iPhone, sirva o arquivo via algum servidor local ou hospede em GitHub Pages.
+> **iPhone/Safari:** o app é hospedado via GitHub Pages, então funciona normalmente no Safari do iPhone com persistência total dos dados.
 
 ## Treinos incluídos
 
