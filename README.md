@@ -1,5 +1,7 @@
 # Treino ABC
 
+**[Acessar o app](https://motokiarthur.github.io/treino/)**
+
 Aplicativo web simples para registrar e acompanhar treinos no esquema **Leg / Push / Pull** (ciclo ABC duplo).
 
 ## O que faz
